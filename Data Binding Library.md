@@ -588,6 +588,42 @@ ColorStateList	    @color	             @colorStateList
 # Observable Objects
 
 * A class implementing the Observable interface will allow the binding to attach a single listener to a bound object to listen for changes of all properties on that object.
+* 一个实现了Observable接口的类将允许给绑定对象绑定关联一个监听器去监听该对象中所有属性的变化情况。
+* The Observable interface has a mechanism to add and remove listeners, but notifying is up to the developer. To make development easier, a base class, BaseObservable, was created to implement the listener registration mechanism. The data class implementer is still responsible for notifying when the properties change. This is done by assigning a Bindable annotation to the getter and notifying in the setter.
+* Observable接口有一个添加和移除监听器的机制，而已通知是在不断的发展改进的。创建一个基本的BaseObservable类区实现监听器注册机制对于开发来说是很容易的。通过分配一个Bindable注解给数据类的getter和setter，当属性改变时，数据类的视线仍然能响应通知。
+
+```
+private static class User extends BaseObservable {
+   private String firstName;
+   private String lastName;
+   @Bindable
+   public String getFirstName() {
+       return this.firstName;
+   }
+   @Bindable
+   public String getLastName() {
+       return this.lastName;
+   }
+   public void setFirstName(String firstName) {
+       this.firstName = firstName;
+       notifyPropertyChanged(BR.firstName);
+   }
+   public void setLastName(String lastName) {
+       this.lastName = lastName;
+       notifyPropertyChanged(BR.lastName);
+   }
+}
+```
+* The Bindable annotation generates an entry in the BR class file during compilation. The BR class file will be generated in the module package. If the base class for data classes cannot be changed, the Observable interface may be implemented using the convenient PropertyChangeRegistry to store and notify listeners efficiently.
+
+* 在编译的时候，Bindable注解在BR类文件中生成一个条目。在模块包下生成一个BR文件。如果数据类是一个不能改变的类，Observable接口会通过使用适当的PropertyChangeRegister去有效的存储和通知监听者来实现。
+
+#ObservableFields
+* A little work is involved in creating Observable classes, so developers who want to save time or have few properties may use ObservableField and its siblings ObservableBoolean, ObservableByte, ObservableChar, ObservableShort, ObservableInt, ObservableLong, ObservableFloat, ObservableDouble, and ObservableParcelable. ObservableFields are self-contained observable objects that have a single field. The primitive versions avoid boxing and unboxing during access operations. To use, create a public final field in the data class:
+* 在创建Observable类时还是要做一些工作的，所以一些想去解约事件或者希望有一些可使用的属性的开发着可以使用ObservableField和与之类似的ObservableBoolean，ObservableByte，ObservableChar，ObservableDouble，ObservableLong，ObservableFloat，ObservableDouble，ObservableParcelable。ObservableFields 是一个有单一字段的自包含的observable对象。最初的版本是避免在操作时做装箱和拆箱操作。在数据类中以public final 字段形式创建并使用。
+
+
+
 
 
 
