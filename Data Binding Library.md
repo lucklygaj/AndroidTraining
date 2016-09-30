@@ -472,7 +472,8 @@ ZoomControls	setOnZoomOutClickListener(View.OnClickListener)	android:onZoomOut
 * Ternary operator ?:
 ### Examples: 例子
 
-``` android:text="@{String.valueOf(index + 1)}"
+``` 
+android:text="@{String.valueOf(index + 1)}"
 android:visibility="@{age < 13 ? View.GONE : View.VISIBLE}"
 android:transitionName='@{"image_" + id}'
 ```
