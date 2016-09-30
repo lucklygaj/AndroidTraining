@@ -623,6 +623,182 @@ private static class User extends BaseObservable {
 * A little work is involved in creating Observable classes, so developers who want to save time or have few properties may use ObservableField and its siblings ObservableBoolean, ObservableByte, ObservableChar, ObservableShort, ObservableInt, ObservableLong, ObservableFloat, ObservableDouble, and ObservableParcelable. ObservableFields are self-contained observable objects that have a single field. The primitive versions avoid boxing and unboxing during access operations. To use, create a public final field in the data class:
 * 在创建Observable类时还是要做一些工作的，所以一些想去解约事件或者希望有一些可使用的属性的开发着可以使用ObservableField和与之类似的ObservableBoolean，ObservableByte，ObservableChar，ObservableDouble，ObservableLong，ObservableFloat，ObservableDouble，ObservableParcelable。ObservableFields 是一个有单一字段的自包含的observable对象。最初的版本是避免在操作时做装箱和拆箱操作。在数据类中以public final 字段形式创建并使用。
 
+```
+private static class User {
+   public final ObservableField<String> firstName =
+       new ObservableField<>();
+   public final ObservableField<String> lastName =
+       new ObservableField<>();
+   public final ObservableInt age = new ObservableInt();
+}
+```
+* That's it! To access the value, use the set and get accessor methods:
+* 就是这样，使用set和get方法去获取值
+
+```
+user.firstName.set("Google");
+int age = user.age.get();
+
+```
+# Observable Collections
+
+* Some applications use more dynamic structures to hold data. Observable collections allow keyed access to these data objects. ObservableArrayMap is useful when the key is a reference type, such as String.
+
+* 一些应用更多地使用动态结构去控制数据。Observable collections 允许键值对的形势去获取数据对象。ObservableArrayMap是很常用的一个，它的key是一个引用类型，比如String。
+
+```
+ObservableArrayMap<String, Object> user = new ObservableArrayMap<>();
+user.put("firstName", "Google");
+user.put("lastName", "Inc.");
+user.put("age", 17);
+
+```
+* In the layout, the map may be accessed through the String keys:
+
+* 在布局中，可以通过String类型的key访问map。
+
+```
+<data>
+    <import type="android.databinding.ObservableMap"/>
+    <variable name="user" type="ObservableMap&lt;String, Object&gt;"/>
+</data>
+…
+<TextView
+   android:text='@{user["lastName"]}'
+   android:layout_width="wrap_content"
+   android:layout_height="wrap_content"/>
+<TextView
+   android:text='@{String.valueOf(1 + (Integer)user["age"])}'
+   android:layout_width="wrap_content"
+   android:layout_height="wrap_content"/>
+```
+* ObservableArrayList is useful when the key is an integer:
+
+* ObservableArrayList 也是很常用的，它的key是一个integer：
+```
+ObservableArrayList<Object> user = new ObservableArrayList<>();
+user.add("Google");
+user.add("Inc.");
+user.add(17);
+```
+* In the layout, the list may be accessed through the indices:
+
+* 在布局中可以通过 下标访问list
+
+```
+<data>
+    <import type="android.databinding.ObservableList"/>
+    <import type="com.example.my.app.Fields"/>
+    <variable name="user" type="ObservableList&lt;Object&gt;"/>
+</data>
+…
+<TextView
+   android:text='@{user[Fields.LAST_NAME]}'
+   android:layout_width="wrap_content"
+   android:layout_height="wrap_content"/>
+<TextView
+   android:text='@{String.valueOf(1 + (Integer)user[Fields.AGE])}'
+   android:layout_width="wrap_content"
+   android:layout_height="wrap_content"/>
+```
+# Generated Binding
+* The generated binding class links the layout variables with the Views within the layout. As discussed earlier, the name and package of the Binding may be customized. The Generated binding classes all extend ViewDataBinding.
+
+* 使用Views内部的layout可以将生成的绑定类于布局变量链接起来。就像前面讨论的一样，绑定的包名可疑被自定义。所有生成的绑定类都继承ViewDataBinding这个类
+
+### Creating
+* The binding should be created soon after inflation to ensure that the View hierarchy is not disturbed prior to binding to the Views with expressions within the layout. There are a few ways to bind to a layout. The most common is to use the static methods on the Binding class.The inflate method inflates the View hierarchy and binds to it all it one step. There is a simpler version that only takes a LayoutInflater and one that takes a ViewGroup as well:
+* 在View被inflation后应该尽快创建绑定，这样能确保在layout里用表达式绑定View之前View的层级不被干扰。以下是几种绑定layout的方式。最常用的是在绑定类上使用静态方法inflate方法去Inflates View的层级和绑定它，所有操作只需要一步完成。这是i 个简单版本的方法，里面只使用一噶LayoutInflater和一个ViewGroup：
+
+```
+MyLayoutBinding binding = MyLayoutBinding.inflate(layoutInflater);
+MyLayoutBinding binding = MyLayoutBinding.inflate(layoutInflater, viewGroup, false);
+```
+* If the layout was inflated using a different mechanism, it may be bound separately:
+
+* 如果layout是通过不同的机制进行inflated，那么它可以被单独地绑定。
+```
+MyLayoutBinding binding = MyLayoutBinding.bind(viewRoot);
+```
+* Sometimes the binding cannot be known in advance. In such cases, the binding can be created using the DataBindingUtil class:
+
+* 有时，我们并不能预先知道绑定的东西。在这种情况下，可以使用DataBindingUtils类去创建绑定。
+
+```
+ViewDataBinding binding = DataBindingUtil.inflate(LayoutInflater, layoutId,
+    parent, attachToParent);
+ViewDataBinding binding = DataBindingUtil.bindTo(viewRoot, layoutId);
+```
+# Views With IDs
+
+* A public final field will be generated for each View with an ID in the layout. The binding does a single pass on the View hierarchy, extracting the Views with IDs. This mechanism can be faster than calling findViewById for several Views. For example:
+
+* 在layout中使用View的一个ID为每个View生成一个public final类型的字段。在View的层级中，绑定根据IDs提取View并简单的传入View的层级中。这个机制比通过调用各种Views的findViewById方法获取View更加的快速。例如：
+
+```
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+   <data>
+       <variable name="user" type="com.example.User"/>
+   </data>
+   <LinearLayout
+       android:orientation="vertical"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent">
+       <TextView android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="@{user.firstName}"
+   android:id="@+id/firstName"/>
+       <TextView android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="@{user.lastName}"
+  android:id="@+id/lastName"/>
+   </LinearLayout>
+</layout>
+```
+* Will generate a binding class with:
+
+* 将会使用如下代码生成一个绑定类：
+
+```
+public final TextView firstName;
+public final TextView lastName;
+```
+* IDs are not nearly as necessary as without data binding, but there are still some instances where access to Views are still necessary from code.
+
+* 如果没有数据绑定，IDs并不是必须的，但是仍然有些情况下需要从代码里面访问Views时，IDs仍然是需要的。
+
+# Variables 变量
+
+* Each variable will be given accessor methods.
+* 每一个变量都将被给予一个存储器方法
+```
+<data>
+    <import type="android.graphics.drawable.Drawable"/>
+    <variable name="user"  type="com.example.User"/>
+    <variable name="image" type="Drawable"/>
+    <variable name="note"  type="String"/>
+</data>
+
+```
+* will generate setters and getters in the binding:
+* 在绑定时将会生成一个setters和一个getters存储器
+
+```
+public abstract com.example.User getUser();
+public abstract void setUser(com.example.User user);
+public abstract Drawable getImage();
+public abstract void setImage(Drawable image);
+public abstract String getNote();
+public abstract void setNote(String note);
+```
+# ViewStubs
+
+
+
+
+
+
+
 
 
 
