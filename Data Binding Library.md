@@ -450,54 +450,69 @@ ZoomControls	setOnZoomOutClickListener(View.OnClickListener)	android:onZoomOut
    </merge>
 </layout>
 ```
-# Expression Language
-Common Features
-The expression language looks a lot like a Java expression. These are the same:
+# Expression Language 表达式语言
+### Common Features 常用特性
+* The expression language looks a lot like a Java expression. These are the same:
+* 表达式语言看上去很像java表达式。下面是一些相同的部分
 
-Mathematical + - / * %
-String concatenation +
-Logical && ||
-Binary & | ^
-Unary + - ! ~
-Shift >> >>> <<
-Comparison == > < >= <=
-instanceof
-Grouping ()
-Literals - character, String, numeric, null
-Cast
-Method calls
-Field access
-Array access []
-Ternary operator ?:
-Examples:
+* Mathematical + - / * %    数学运算
+* String concatenation +    字符串连接
+* Logical && ||				 逻辑运算符
+* Binary & | ^					位运算符
+* Unary + - ! ~					一元运算符
+* Shift >> >>> <<				位移运算
+* Comparison == > < >= <=		比较运算
+* instanceof						判断实例类型
+* Grouping ()						分组
+* Literals - character, String, numeric, null
+* Cast
+* Method calls
+* Field access
+* Array access []
+* Ternary operator ?:
+### Examples: 例子
 
-android:text="@{String.valueOf(index + 1)}"
+``` android:text="@{String.valueOf(index + 1)}"
 android:visibility="@{age < 13 ? View.GONE : View.VISIBLE}"
 android:transitionName='@{"image_" + id}'
-Missing Operations
-A few operations are missing from the expression syntax that you can use in Java.
+```
+# Missing Operations 没有的操作
+* A few operations are missing from the expression syntax that you can use in Java.
+* 一些可以在Java中使用的操作在表达式语法中是没有的
 
-this
-super
-new
-Explicit generic invocation
-Null Coalescing Operator
+* this
+* super
+* new
+* Explicit generic invocation
+# Null Coalescing Operator Null 的聚合操作
 The null coalescing operator (??) chooses the left operand if it is not null or the right if it is null.
+null聚合操作(??)如果不为null选择左边的操作数，如果为null，选择右边的操作数
 
+``` 
 android:text="@{user.displayName ?? user.lastName}"
-This is functionally equivalent to:
-
+```
+* This is functionally equivalent to:
+* 以下的功能是等价的
+```
 android:text="@{user.displayName != null ? user.displayName : user.lastName}"
-Property Reference
-The first was already discussed in the Writing your first data binding expressions above: short form JavaBean references. When an expression references a property on a class, it uses the same format for fields, getters, and ObservableFields.
+```
+#Property Reference 属性引用
+* The first was already discussed in the Writing your first data binding expressions above: short form JavaBean references. When an expression references a property on a class, it uses the same format for fields, getters, and ObservableFields.
+* 在上面有关JavaBean的使用部分中已经讨论了如何写你的第一个数据绑定表达式。当表达式引用了一个类的属性时，他要使用一样的fields，getters，ObservableFields
 
+```
 android:text="@{user.lastName}"
-Avoiding NullPointerException
-Generated data binding code automatically checks for nulls and avoid null pointer exceptions. For example, in the expression @{user.name}, if user is null, user.name will be assigned its default value (null). If you were referencing user.age, where age is an int, then it would default to 0.
+```
+#Avoiding NullPointerException 避免空指针异常
 
-Collections
-Common collections: arrays, lists, sparse lists, and maps, may be accessed using the [] operator for convenience.
+* Generated data binding code automatically checks for nulls and avoid null pointer exceptions. For example, in the expression @{user.name}, if user is null, user.name will be assigned its default value (null). If you were referencing user.age, where age is an int, then it would default to 0.
 
+* 生成的数据绑定代码会自动检查空引用和空指针异常。例如，在表达式```@{user.name}```,如果user是null，user.name将被配置一个默认的null值。如果你引用user.age,age是一个int类型字段，那么他将默认是0.
+
+#Collections 集合
+
+* Common collections: arrays, lists, sparse lists, and maps, may be accessed using the [] operator for convenience.
+```
 <data>
     <import type="android.util.SparseArray"/>
     <import type="java.util.Map"/>
@@ -514,35 +529,65 @@ android:text="@{list[index]}"
 android:text="@{sparse[index]}"
 …
 android:text="@{map[key]}"
-String Literals
-When using single quotes around the attribute value, it is easy to use double quotes in the expression:
-
+```
+#String Literals
+* When using single quotes around the attribute value, it is easy to use double quotes in the expression:
+```
 android:text='@{map["firstName"]}'
-It is also possible to use double quotes to surround the attribute value. When doing so, String literals should either use the ' or back quote (`).
-
+```
+* It is also possible to use double quotes to surround the attribute value. When doing so, String literals should either use the ' or back quote (`).
+```
 android:text="@{map[`firstName`}"
 android:text="@{map['firstName']}"
-Resources
-It is possible to access resources as part of expressions using the normal syntax:
+```
+#Resources
 
+* It is possible to access resources as part of expressions using the normal syntax:
+* 使用正常的表达式语法可以获得资源
+```
 android:padding="@{large? @dimen/largePadding : @dimen/smallPadding}"
-Format strings and plurals may be evaluated by providing parameters:
-
+```
+* Format strings and plurals may be evaluated by providing parameters:
+* 格式化字符串和复数可以通过提供的参数进行评估：
+```
 android:text="@{@string/nameFormat(firstName, lastName)}"
 android:text="@{@plurals/banana(bananaCount)}"
-When a plural takes multiple parameters, all parameters should be passed:
-
+```
+* When a plural takes multiple parameters, all parameters should be passed:
+* 当一个复数采用多个参数是，所有的参数都应该被传入。
+```
 
   Have an orange
   Have %d oranges
 
-android:text="@{@plurals/orange(orangeCount, orangeCount)}"
-Some resources require explicit type evaluation.
+android:text="@{@plurals/orange(orangeCount, 
+orangeCount)}"
+```
+* Some resources require explicit type evaluation.
+* 一些资源要求明确评估类型
+* 
 
-Type	Normal Reference	Expression Reference
-String[]	@array	@stringArray
-int[]	@array	@intArray
-TypedArray
+```
+Type	           Normal Reference	   Expression Reference
+String[]	        @array     	         @stringArray
+int[]	            @array	             @intArray
+TypedArray          @array           	 @typedArray
+Animator	        @animator	         @animator
+StateListAnimator   @animator	         @stateListAnimator
+color int	        @color	             @color
+ColorStateList	    @color	             @colorStateList
+```
+# Data Objects
+
+* Any plain old Java object (POJO) may be used for data binding, but modifying a POJO will not cause the UI to update. The real power of data binding can be used by giving your data objects the ability to notify when data changes. There are three different data change notification mechanisms, Observable objects, observable fields, and observable collections.
+* 数据绑定可以使用所有的Java对象（POJO），但是修改一个POJO不会引起一个UI的更新。通过给予你的数据对象一个在数据发生变化时可以通知的能力来使用数据绑定真正强大的能力。这是三个不同的数据改变通知机制，Observable对象，observable字段，observable集合
+* When one of these observable data object is bound to the UI and a property of the data object changes, the UI will be updated automatically.
+
+* 当被绑定到UI中的有一个是observable数据对象时，如果数据对象的属性值改变了，UI也会自动更新。
+
+# Observable Objects
+
+* A class implementing the Observable interface will allow the binding to attach a single listener to a bound object to listen for changes of all properties on that object.
 
 
 
