@@ -841,6 +841,7 @@ public void onBindViewHolder(BindingHolder holder, int position) {
 * 对于一个属性，数据绑定尝试着去查找setAttribute的方法。于属性的命名空间没有关系，只与属性本身的名字有关。
 
 * For example, an expression associated with TextView's attribute android:text will look for a setText(String). If the expression returns an int, data binding will search for a setText(int) method. Be careful to have the expression return the correct type, casting if necessary. Note that data binding will work even if no attribute exists with the given name. You can then easily "create" attributes for any setter by using data binding. For example, support DrawerLayout doesn't have any attributes, but plenty of setters. You can use the automatic setters to use one of these.
+
 * 例如，一个与TextView的android : text关联的表达式就会查找一个setText(String) 的方法。如果该表达式返回一个int值，数据绑定会继续搜索一个setText(int)的方法。如果有需要，要特别注意表达式返回正确类型。
 
 ```
@@ -851,23 +852,31 @@ public void onBindViewHolder(BindingHolder holder, int position) {
     app:drawerListener="@{fragment.drawerListener}"/>
 ```
 
+###Renamed Setters 重命名Setters
 
+* Some attributes have setters that don't match by name. For these methods, an attribute may be associated with the setter through BindingMethods annotation. This must be associated with a class and contains BindingMethod annotations, one for each renamed method. For example, the android:tint attribute is really associated with setImageTintList(ColorStateList), not setTint.
+* 一些属性的setters不能通过名字进行匹配。对于此种情况，我们可以使用BindingMethods注解将一个属性和setter进行关联。对于每个重命名的方法，该方法必须属于一个类并且包含BindingMethod注解。例如，android:tint 属性实际上是鱼setImageTintList（ColorStateList）方法相关联，而不是setTint方法。
 
-Renamed Setters
-Some attributes have setters that don't match by name. For these methods, an attribute may be associated with the setter through BindingMethods annotation. This must be associated with a class and contains BindingMethod annotations, one for each renamed method. For example, the android:tint attribute is really associated with setImageTintList(ColorStateList), not setTint.
-
+```
 @BindingMethods({
        @BindingMethod(type = "android.widget.ImageView",
                       attribute = "android:tint",
                       method = "setImageTintList"),
 })
-It is unlikely that developers will need to rename setters; the android framework attributes have already been implemented.
+```
 
-Custom Setters
-Some attributes need custom binding logic. For example, there is no associated setter for the android:paddingLeft attribute. Instead, setPadding(left, top, right, bottom) exists. A static binding adapter method with the BindingAdapter annotation allows the developer to customize how a setter for an attribute is called.
+* It is unlikely that developers will need to rename setters; the android framework attributes have already been implemented.
+* Android框架的属性早已经被实现，开发者去重命名框架的方法是不可能的。
 
-The android attributes have already had BindingAdapters created. For example, here is the one for paddingLeft:
+### Custom Setters 自定义setters
 
+* Some attributes need custom binding logic. For example, there is no associated setter for the android:paddingLeft attribute. Instead, setPadding(left, top, right, bottom) exists. A static binding adapter method with the BindingAdapter annotation allows the developer to customize how a setter for an attribute is called.
+* 一些属性需要自定义绑定逻辑。例如，对于android：paddingLeft属性是与setter没有联系的。而是与setPadding(left,top,right,bottom)方法相关联。使用BindingAdapter注解的一个静态绑定适配器的方法允许开发者去定义该属性的setter方法被调用时做些什么。
+
+* The android attributes have already had BindingAdapters created. For example, here is the one for paddingLeft:
+* android的属性早已被BindingAdaoters创建。例如，这是一个paddingLeft的例子：
+
+```
 @BindingAdapter("android:paddingLeft")
 public static void setPaddingLeft(View view, int padding) {
    view.setPadding(padding,
@@ -875,23 +884,44 @@ public static void setPaddingLeft(View view, int padding) {
                    view.getPaddingRight(),
                    view.getPaddingBottom());
 }
-Binding adapters are useful for other types of customization. For example, a custom loader can be called off-thread to load an image.
+```
 
-Developer-created binding adapters will override the data binding default adapters when there is a conflict.
+* Binding adapters are useful for other types of customization. For example, a custom loader can be called off-thread to load an image.
+* 绑定适配器对于自定义的类型是很有用的。例如，一个自定的一加载器可以调用离线的线程去加载一个图像。
 
-You can also have adapters that receive multiple parameters.
+* Developer-created binding adapters will override the data binding default adapters when there is a conflict.
+* 当有冲突的时候，被开发者创建的绑定适配器将被默认的绑数据绑定适配器覆盖。
 
+* You can also have adapters that receive multiple parameters.
+* 你也可以有一个接收多个参数的适配器
+
+```
 @BindingAdapter({"bind:imageUrl", "bind:error"})
 public static void loadImage(ImageView view, String url, Drawable error) {
    Picasso.with(view.getContext()).load(url).error(error).into(view);
 }
+```
+
+```
 <ImageView app:imageUrl="@{venue.imageUrl}"
 app:error="@{@drawable/venueError}"/>
-This adapter will be called if both imageUrl and error are used for an ImageView and imageUrl is a string and error is a drawable.
+```
 
-Custom namespaces are ignored during matching.
-You can also write adapters for android namespace.
+ This adapter will be called if both imageUrl and error are used for an ImageView and imageUrl is a string and error is a drawable.
+ 
+ 如果被一个ImageView使用的imageUrl错误或者imageUrl是一个错误的drawable字符串，该适配器都会被调用
+
+* Custom namespaces are ignored during matching.
+* 自定义命名空间在匹配的过程中被忽略
+
+* You can also write adapters for android namespace.
+* 你也可以对android命名空间写一个适配器
+
 Binding adapter methods may optionally take the old values in their handlers. A method taking old and new values should have all old values for the attributes come first, followed by the new values:
+
+在他们的处理程序中，绑定适配器的方法可以随意的获得旧的值。一个方法获得旧的值和新的值的时候，首先获得的是该属性的所有旧的值，然后才是新的值。
+
+```
 
 @BindingAdapter("android:paddingLeft")
 public static void setPaddingLeft(View view, int oldPadding, int newPadding) {
@@ -902,8 +932,13 @@ public static void setPaddingLeft(View view, int oldPadding, int newPadding) {
                        view.getPaddingBottom());
    }
 }
-Event handlers may only be used with interfaces or abstract classes with one abstract method. For example:
 
+```
+
+* Event handlers may only be used with interfaces or abstract classes with one abstract method. For example:
+* 事件处理程序仅可以和接口或者抽象类的一个抽象方法一起使用。例如：
+
+```
 @BindingAdapter("android:onLayoutChange")
 public static void setOnLayoutChangeListener(View view, View.OnLayoutChangeListener oldValue,
        View.OnLayoutChangeListener newValue) {
@@ -916,8 +951,13 @@ public static void setOnLayoutChangeListener(View view, View.OnLayoutChangeListe
         }
     }
 }
-When a listener has multiple methods, it must be split into multiple listeners. For example, View.OnAttachStateChangeListener has two methods: onViewAttachedToWindow() and onViewDetachedFromWindow(). We must then create two interfaces to differentiate the attributes and handlers for them.
 
+```
+
+* When a listener has multiple methods, it must be split into multiple listeners. For example, View.OnAttachStateChangeListener has two methods: onViewAttachedToWindow() and onViewDetachedFromWindow(). We must then create two interfaces to differentiate the attributes and handlers for them.
+* 当一个监听者有多个方法时，它必须被分割成多个简体器。例如，View.OnAttachStateChangeListener 有两个方法：onViewAttachedToWindow（）和onViewDetachdFromWindow().我们必须为该属性创建两个不同的接口并处理它们。
+
+```
 @TargetApi(VERSION_CODES.HONEYCOMB_MR1)
 public interface OnViewDetachedFromWindow {
     void onViewDetachedFromWindow(View v);
@@ -927,8 +967,13 @@ public interface OnViewDetachedFromWindow {
 public interface OnViewAttachedToWindow {
     void onViewAttachedToWindow(View v);
 }
-Because changing one listener will also affect the other, we must have three different binding adapters, one for each attribute and one for both, should they both be set.
 
+```
+
+* Because changing one listener will also affect the other, we must have three different binding adapters, one for each attribute and one for both, should they both be set.
+* 对于每一个应该被设置的属性，我们必须有多个不同的绑定适配器，因为改变一个监听器也会影响另外一个，
+
+```
 @BindingAdapter("android:onViewAttachedToWindow")
 public static void setListener(View view, OnViewAttachedToWindow attached) {
     setListener(view, null, attached);
@@ -973,56 +1018,97 @@ public static void setListener(View view, final OnViewDetachedFromWindow detach,
         }
     }
 }
-The above example is slightly more complicated than normal because View uses add and remove for the listener instead of a set method for View.OnAttachStateChangeListener. The android.databinding.adapters.ListenerUtil class helps keep track of the previous listeners so that they may be removed in the Binding Adaper.
 
-By annotating the interfaces OnViewDetachedFromWindow and OnViewAttachedToWindow with @TargetApi(VERSION_CODES.HONEYCOMB_MR1), the data binding code generator knows that the listener should only be generated when running on Honeycomb MR1 and new devices, the same version supported by addOnAttachStateChangeListener(View.OnAttachStateChangeListener).
+```
 
-Converters
-Object Conversions
-When an Object is returned from a binding expression, a setter will be chosen from the automatic, renamed, and custom setters. The Object will be cast to a parameter type of the chosen setter.
+* The above example is slightly more complicated than normal because View uses add and remove for the listener instead of a set method for View.OnAttachStateChangeListener. The android.databinding.adapters.ListenerUtil class helps keep track of the previous listeners so that they may be removed in the Binding Adaper.
+* 以上的例子比一般的例子要稍微复杂。因为View对监听器使用add和remove去替换一个View。OnAttachStateChangeListener的set方法。android.databinding.adapters.ListenerUtil类帮助跟踪之前的简体器一遍监听器可以在Binding Adapter中移除。
 
-This is a convenience for those using ObservableMaps to hold data. for example:
+* By annotating the interfaces OnViewDetachedFromWindow and OnViewAttachedToWindow with @TargetApi(VERSION_CODES.HONEYCOMB_MR1), the data binding code generator knows that the listener should only be generated when running on Honeycomb MR1 and new devices, the same version supported by addOnAttachStateChangeListener(View.OnAttachStateChangeListener).
+* OnViewDetachedFromWindow和OnViewAttachedToWindsw接口通过使用注解@TaegetApi（VERSION_CODES.HONEYCOMEB_MR1），只有当运行在Honeycomb MR1盒心得设备时，数据绑定代码生产者才会生成监听器。
 
+#Converters 转换器
+
+###Object Conversions 对象转换器
+
+* When an Object is returned from a binding expression, a setter will be chosen from the automatic, renamed, and custom setters. The Object will be cast to a parameter type of the chosen setter.
+* 当从一个绑定表达式中返回一个对象，该对象的一个自动的、从命名的河自定义的setters将被选择。该对象的类型将被转换成被选择的setter的参数类型。
+
+* This is a convenience for those using ObservableMaps to hold data. for example:
+* 使用ObservableMaps去控制数据的这是很方便的，例如：
+
+```
 <TextView
    android:text='@{userMap["lastName"]}'
    android:layout_width="wrap_content"
    android:layout_height="wrap_content"/>
-The userMap returns an Object and that Object will be automatically cast to parameter type found in the setter setText(CharSequence). When there may be confusion about the parameter type, the developer will need to cast in the expression.
+   
+```
 
-Custom Conversions
-Sometimes conversions should be automatic between specific types. For example, when setting the background:
+* The userMap returns an Object and that Object will be automatically cast to parameter type found in the setter setText(CharSequence). When there may be confusion about the parameter type, the developer will need to cast in the expression.
+* userMap返回一个对象并且该对象将被自动转换成在setText（CharSequence）方法中找到的参数类型。当参数类型可能被混淆的时候，开发者奖需要去转换表达式。
 
+###Custom Conversions 自定义转换器
+
+* Sometimes conversions should be automatic between specific types. For example, when setting the background:
+* 一些时候的转换器应该自动选择特定的类型。例如，当设置背景时：
+
+```
 <View
    android:background="@{isError ? @color/red : @color/white}"
    android:layout_width="wrap_content"
    android:layout_height="wrap_content"/>
-Here, the background takes a Drawable, but the color is an integer. Whenever a Drawable is expected and an integer is returned, the int should be converted to a ColorDrawable. This conversion is done using a static method with a BindingConversion annotation:
+```
 
+* Here, the background takes a Drawable, but the color is an integer. Whenever a Drawable is expected and an integer is returned, the int should be converted to a ColorDrawable. This conversion is done using a static method with a BindingConversion annotation:
+* 这里，北京获得了一个Drawable，但是颜色是一个整型。无论是一个Drawable异常还是返回一个整型，该整型都应该被转换成一个ColorDrawable。使用一个使用了BindingConversion注解的静态方法完成了转换。
+
+```
 @BindingConversion
 public static ColorDrawable convertColorToDrawable(int color) {
    return new ColorDrawable(color);
 }
-Note that conversions only happen at the setter level, so it is not allowed to mix types like this:
 
+```
+
+* Note that conversions only happen at the setter level, so it is not allowed to mix types like this:
+* 注意，转换旨在setter方法里触发，所以转换不允许像下面这样的混合类型。
+
+```
 <View
    android:background="@{isError ? @drawable/error : @color/white}"
    android:layout_width="wrap_content"
    android:layout_height="wrap_content"/>
-Android Studio Support for Data Binding
+```
+
+###Android Studio Support for Data Binding Android Studio对于数据绑定的支持。
+
 Android Studio supports many of the code editing features for data binding code. For example, it supports the following features for data binding expressions:
 
-Syntax highlighting
-Flagging of expression language syntax errors
-XML code completion
-References, including navigation (such as navigate to a declaration) and quick documentation
+Android Studio支持很多语句数据绑定代码的代码编辑特性。例如，它支持对于数据绑定表达式的一下特性：
+
+* Syntax highlighting 
+* 语法高亮
+* Flagging of expression language syntax errors
+* XML code completion
+* References, including navigation (such as navigate to a declaration) and quick documentation
+
 Note: Arrays and a generic type, such as the Observable class, might display errors when there are no errors.
+注意：Arrays和一般的类型，例如Observable类没有错误的时候可能会显示错误。
 
-The Preview pane displays default values for data binding expressions if provided. In the following example excerpt of an element from a layout XML file, the Preview pane displays the PLACEHOLDER default text value in the TextView.
+* The Preview pane displays default values for data binding expressions if provided. In the following example excerpt of an element from a layout XML file, the Preview pane displays the PLACEHOLDER default text value in the TextView.
+* 如果支持的话，预览版对于数据绑定表达式会展示默认的值。以下例子类子引用自一个来自于布局xml文件的元素，预览版会显示TextView的
+PLACEHOLDER的迷人值
 
+```
 <TextView android:layout_width="wrap_content"
    android:layout_height="wrap_content"
    android:text="@{user.firstName, default=PLACEHOLDER}"/>
-If you need to display a default value during the design phase of your project, you can also use tools attributes instead of default expression values, as described in Designtime Layout Attributes.
+
+```
+
+* If you need to display a default value during the design phase of your project, you can also use tools attributes instead of default expression values, as described in Designtime Layout Attributes.
+* 在设计你的项目的时候，如果你需要去现实一个默认值，虽然在设计时的布局属性中描述了，你也可以使用tools属性替换默认的表达式值，
 
 
 
